@@ -1,0 +1,14 @@
+one of the ports is kuberbetes running a web application. Do dirsearch and retrieve git credentials for frank, you can ssh on the target with those credentials. THen in a folder you can find a database file with many more users with credentials.
+as we're dealing with microk8s, we can use kubectl even without root. WE jsut have to exploit CVE-2019-15789 which is a privilege escalation vulnerability. FOllow the steps from this URL https://exploit-notes.hdks.org/exploit/container/kubernetes/microk8s/
+
+the idea is to create a new yaml file, for example pod.yaml, with the exact name of the container running on the target machine, which in this case was localhost/ns...
+after that, we apply using microk8s kubectl apply -f pod.yaml, then microk8s kubectl exec -it hostmount /bin/bash; houstmount refers to the name of the image which is on pod.yaml file.
+Right after that, we should gain a shell on that mounted pod and we can search for root.txt, it will appear at /opt/root/root/root.txt
+
+
+RIsk:
+- critical because we can create a pod of our own as an unprivileged user and get root to the underlying host
+
+
+MItigation of the vulnerability:
+- the owner of the target machine should make sure that only a privileged user can edit, create or delete any pods, not any user
