@@ -1,0 +1,94 @@
+***Nmap***
+NSE: Script scanning 10.10.11.46.
+Initiating NSE at 17:55
+Completed NSE at 17:55, 3.81s elapsed
+Initiating NSE at 17:55
+Completed NSE at 17:55, 0.50s elapsed
+Initiating NSE at 17:55
+Completed NSE at 17:55, 0.00s elapsed
+Nmap scan report for heal.htb (10.10.11.46)
+Host is up (0.52s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   256 68:af:80:86:6e:61:7e:bf:0b:ea:10:52:d7:7a:94:3d (ECDSA)
+|_  256 52:f4:8d:f1:c7:85:b6:6f:c6:5f:b2:db:a6:17:68:ae (ED25519)
+80/tcp open  http    nginx 1.18.0 (Ubuntu)
+|_http-title: Heal
+|_http-favicon: Unknown favicon MD5: 800D9D6AD40E40173F19D5EE9752AC18
+|http-server-header: nginx/1.18.0 (Ubuntu)
+| http-methods:
+|  Supported Methods: GET HEAD POST OPTIONS
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+
+# api.heal.htb
+api.heal.htb
+- **Rails version:** 7.1.4
+- **Ruby version:** ruby 3.3.5 (2024-09-03 revision ef084cc8f4) [x86_64-linux]
+
+
+
+# take-survey.heal.htb
+
+Administrator ralph@heal.htb
+
+lime survey 6.6.4
+lime survey db
+
+```jsx
+	'components' => array(
+		'db' => array(
+			'connectionString' => 'pgsql:host=localhost;port=5432;user=db_user;password=Admxxxxxxxxxxxxxx;dbname=survey;',
+			'emulatePrepare' => true,
+			'username' => 'db_user',
+			'password' => 'Admxxxxxxxxxxxxx',
+			'charset' => 'utf8',
+			'tablePrefix' => 'lime_',
+
+```
+
+ron:Admxxxxxxxxxxxxxxx
+user.txt found
+
+
+Once user flag found, verify that another port (local) is open.
+8500/tcp local port
+just search consul 1.19.2 on google, you get rce exploit on exploit-db; the acl token is present in the config file
+
+
+
+Going to the website running on http port we confirm there's an lfi vulnerability --> api.heal.htb/download?filename=/etc/passwd
+That information leads us to find the database configuration file ../../config/database.yaml
+
+# SQLite. Versions 3.8.0 and up are supported.
+#   gem install sqlite3
+#
+#   Ensure the SQLite 3 gem is defined in your Gemfile
+#   gem "sqlite3"
+#
+default: &default
+  adapter: sqlite3
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+
+development:
+  <<: *default
+  database: storage/development.sqlite3
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
+test:
+  <<: *default
+  database: storage/test.sqlite3
+
+production:
+  <<: *default
+  database: storage/development.sqlite3
+
+
+
+***Raph hash***
+ralph@heal.htb$2a$12$dUZ/O7KJT3.xxxxxxxxxxxxxxxxx
